@@ -1,8 +1,9 @@
 import os
 import tensorflow as tf
 from tensorflow.keras import layers, models
+import matplotlib.pyplot as plt
 
-print("--- Starting PulmoDetect Training Pipeline ---")
+print("--- Starting PulmoDetect Training & Visual Saving Pipeline ---")
 
 # 1. Create Model Architecture
 model = models.Sequential([
@@ -31,27 +32,42 @@ model.fit(X_train, y_train, epochs=2, verbose=1)
 model.save("model.h5")
 print("Model saved successfully!")
 
-# 4. Test Prediction on Real Uploaded Image
+# 4. Test Prediction on Real Uploaded Image & Save Result Image
 print("Running test prediction on real uploaded X-Ray...")
 real_img_path = "test_images/x ray.jpg"
 
 if os.path.exists(real_img_path):
-    img = tf.keras.utils.load_img(real_img_path, target_size=(128, 128))
-    img_array = tf.keras.utils.img_to_array(img)
-    img_array = tf.expand_dims(img_array, 0) # Create batch dimension
+    # Load original image for visualization
+    original_img = tf.keras.utils.load_img(real_img_path)
+    
+    # Load and preprocess image for model prediction
+    img_for_model = tf.keras.utils.load_img(real_img_path, target_size=(128, 128))
+    img_array = tf.keras.utils.img_to_array(img_for_model)
+    img_array = tf.expand_dims(img_array, 0)
     
     prediction = model.predict(img_array)
     score = prediction[0][0]
     print(f"Prediction Score for real image: {score}")
     
     if score < 0.5:
-        print("Result: NORMAL (Clean X-Ray)")
+        result_text = f"Result: NORMAL (Score: {score:.2f})"
+        text_color = "green"
     else:
-        print("Result: DISEASE / ABNORMAL DETECTED")
+        result_text = f"Result: DISEASE (Score: {score:.2f})"
+        text_color = "red"
+        
+    # Plot and save image with result text on top
+    plt.figure(figsize=(6, 6))
+    plt.imshow(original_img)
+    plt.title(result_text, fontsize=14, color=text_color, fontweight='bold')
+    plt.axis('off')
+    
+    # Save the output image
+    output_path = "result_output.png"
+    plt.savefig(output_path, bbox_inches='tight')
+    plt.close()
+    print(f"Result image saved successfully as '{output_path}'!")
 else:
-    print("Warning: Real image not found, falling back to dummy prediction.")
-    dummy_image = tf.random.uniform([1, 128, 128, 3])
-    prediction = model.predict(dummy_image)
-    print(f"Prediction Score: {prediction[0][0]}")
+    print("Warning: Real image not found!")
 
-print("=== Pipeline Executed Successfully with Real X-Ray! ===")
+print("=== Pipeline Executed Successfully with Image Output! ===")
