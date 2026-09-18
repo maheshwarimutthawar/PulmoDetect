@@ -1,5 +1,8 @@
-- name: Upload Result Image
-    uses: actions/upload-artifact@v4
-    with:
-      name: xray-result
-      path: result_output.png
+- name: Run training script
+      run: python train.py
+
+    - name: Upload Result Image
+      uses: actions/upload-artifact@v4
+      with:
+        name: xray-result
+        path: result_output.png
